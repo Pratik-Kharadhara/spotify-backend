@@ -1,5 +1,7 @@
 const userModel = require('../models/user.model');
 const jwt = require("jsonwebtoken")
+//installing bcrypt for hashing 
+const bcrypt = require("bcryptjs");
 
 async function registerUser(req,res){
         //decontruct the  input   
@@ -16,10 +18,14 @@ async function registerUser(req,res){
         })
 
         if(isUserExists){
+                //user already exists
                 return res.status(409).json({
                         message:"user name or email already exist"
                 })
         }
+        //hashing the password recieved from the user 
+        const hash = await bcryp.hash(password,10) //password is taken from  the user and 10 is the saltrounds
+
         //creating a user on the basis of the input 
         const user = await userModel.create({
                 username,
@@ -31,10 +37,25 @@ async function registerUser(req,res){
 
         //creating token basis of the role and user details
         const token = jwt.sign({
-                id: user._id,
-                role:user.role
+                id: user._id, //as we know we have to give one unique value to jwt.sign 
+                //only giving id as unique will do our work 
+                role:user.role // as role is only user or artist its not nesecesary to be unique
         },process.env.JWT_SECRET)
 
+
+        //now set the token to the cookie 
+        res.cookie("token",token)
+        
+        //sending the user details as response of this api
+        res.status(201).json({
+                message:"user registered succefully",
+                user:{
+                        id:user._id,
+                        username:user.username,
+                        email: user.email,
+                        role: user.role
+                }
+        })
 }
 
 module.exports = registerUser;
