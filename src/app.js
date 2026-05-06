@@ -9,7 +9,7 @@ app.use(express.json());
 
 
 
-app.post('/api/auth',authRouter);
+app.use('/api/auth',authRouter);
 
 
 module.exports = app;

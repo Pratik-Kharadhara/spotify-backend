@@ -24,13 +24,13 @@ async function registerUser(req,res){
                 })
         }
         //hashing the password recieved from the user 
-        const hash = await bcryp.hash(password,10) //password is taken from  the user and 10 is the saltrounds
+        const hash = await bcrypt.hash(password,10) //password is taken from  the user and 10 is the saltrounds
 
         //creating a user on the basis of the input 
         const user = await userModel.create({
                 username,
                 email,
-                password,
+                password:hash,
                 role
         })
 
@@ -58,4 +58,52 @@ async function registerUser(req,res){
         })
 }
 
-module.exports = registerUser;
+
+async function loginUser(req,res){
+        const {username , email , password} = req.body;
+        const user = await userModel.findOne({
+                //now it will find on the basis of username or email who are pre-registered
+                //as there can be usernam/email one of them can be undefined 
+                $or:[   
+                        {username},
+                        {email}
+                ]
+        })
+
+        if(!user){ //suppose when both of them missing that means either mail or username wasnot given
+                return res.status(401).json({
+                        message: "user not found"
+                })
+        }
+        //chcecking if the input password correct or not 
+        //by comparing from the bcrypt method 
+        const isPassCorrect = await bcrypt.compare(password,user.password);
+
+        //if the password is incorrect its gonna throw error
+        if(!isPassCorrect){
+                return res.status(401).json({
+                        message:"Invalid Credentials"
+                })
+        }
+
+        //creating token and sending back to the server\
+        const token = await jwt.sign({
+                id:user._id,
+                role:user.role
+        },process.env.JWT_SECRET)
+
+        res.cookie("token",token);
+        res.status(201).json({
+                message:"user found",
+                user:{
+                        id:user._id,
+                        username:user.username,
+                        email: user.email,
+                        role: user.role
+                }
+        })
+
+}
+
+
+module.exports = {registerUser , loginUser};
