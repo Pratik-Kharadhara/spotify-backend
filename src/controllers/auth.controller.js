@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 
 async function registerUser(req,res){
         //decontruct the  input   
-        const {username , email,password,role="user"} = req.body;
+        const {username , email,password,role="listener"} = req.body;
 
         //checking if there is any duplicate user present or not having same email and password
         const isUserExists = await  userModel.findOne({
@@ -24,13 +24,13 @@ async function registerUser(req,res){
                 })
         }
         //hashing the password recieved from the user 
-        const hash = await bcrypt.hash(password,10) //password is taken from  the user and 10 is the saltrounds
+        const hashedPass = await bcrypt.hash(password,10) //password is taken from  the user and 10 is the saltrounds
 
         //creating a user on the basis of the input 
         const user = await userModel.create({
                 username,
                 email,
-                password:hash,
+                password:hashedPass,
                 role
         })
 
