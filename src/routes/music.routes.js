@@ -5,11 +5,14 @@ const multer = require('multer');
 const router = express.Router();
 
 
+//middlewares
+const authMiddleWare = require('../middlewares/auth.middlewares')
+
 const upload = multer({
     storage : multer.memoryStorage()
 })
 
 
-router.post("/upload",upload.single('music'),musicController.uploadMusic);
+router.post("/upload",authMiddleWare,upload.single('music'),musicController.uploadMusic);
 
 module.exports = router; 
